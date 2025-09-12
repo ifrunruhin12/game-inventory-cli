@@ -2,46 +2,24 @@ package main
 
 import (
 	"os"
-	"path/filepath"
-	"text/template"
+
+	"github.com/ifrunruhin12/inventory/data"
+	"github.com/ifrunruhin12/inventory/templates"
+	"github.com/ifrunruhin12/inventory/utils"
 )
 
-type Item struct {
-	Name  string
-	Count int
-}
-
-type Player struct {
-	Name  string
-	Level int
-}
-
-type ReportData struct {
-	Player    Player
-	Inventory []Item
-}
-
 func main() {
-	tmplPath := filepath.Join("templates", "report.tmpl")
-	tmpl, err := template.ParseFiles(tmplPath)
+	tmplMgr, err := templates.NewTemplateManager("templates", "report.tmpl")
 	if err != nil {
-		panic(err)
+		utils.Logger.Error("Failed to load templates", "error", err)
+		os.Exit(1)
 	}
 
-	data := ReportData{
-		Player: Player{
-			Name:  "Popcycle",
-			Level: 7,
-		},
-		Inventory: []Item{
-			{Name: "Sword", Count: 2},
-			{Name: "Potion", Count: 3},
-			{Name: "Bow", Count: 1},
-		},
-	}
+	report := data.DefaultReportData()
 
-	err = tmpl.Execute(os.Stdout, data)
+	err = tmplMgr.Execute(os.Stdout, "report.tmpl", report)
 	if err != nil {
-		panic(err)
+		utils.Logger.Error("Failed to execute template", "error", err)
+		os.Exit(1)
 	}
 }
