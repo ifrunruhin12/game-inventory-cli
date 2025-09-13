@@ -23,27 +23,62 @@ func NewCommandHandler(tmplMgr *TemplateManager, reader *bufio.Reader) *CommandH
 }
 
 func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
-	err := ch.tmplMgr.Execute(os.Stdout, "cmd_prompt.tmpl", nil)
+	for {
+		err := ch.tmplMgr.Execute(os.Stdout, "cmd_prompt.tmpl", nil)
+		if err != nil {
+			utils.Logger.Error("Failed to execute command prompt template", "error", err)
+			return err
+		}
+
+		command, err := ch.reader.ReadString('\n')
+		if err != nil {
+			utils.Logger.Error("Failed to read command input", "error", err)
+			return err
+		}
+
+		command = strings.TrimSpace(command)
+		utils.Logger.Info("Player entered command", "command", command)
+
+		switch command {
+		case "quit", "exit":
+			return ch.handleQuit(playerData)
+		case "show":
+			err = ch.handleShow(playerData)
+			if err != nil {
+				return err
+			}
+		case "cmd":
+			err = ch.handleHelp()
+			if err != nil {
+				return err
+			}
+		default:
+			err = ch.handleUnknownCommand(command)
+			if err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (ch *CommandHandler) handleShow(playerData models.ReportData) error {
+	err := ch.tmplMgr.Execute(os.Stdout, "report.tmpl", playerData)
 	if err != nil {
-		utils.Logger.Error("Failed to execute command prompt template", "error", err)
+		utils.Logger.Error("Failed to execute report template", "error", err)
 		return err
 	}
+	utils.Logger.Info("Player viewed inventory", "player", playerData.Player.Name)
+	return nil
+}
 
-	command, err := ch.reader.ReadString('\n')
+func (ch *CommandHandler) handleHelp() error {
+	err := ch.tmplMgr.Execute(os.Stdout, "help.tmpl", nil)
 	if err != nil {
-		utils.Logger.Error("Failed to read command input", "error", err)
+		utils.Logger.Error("Failed to execute help template", "error", err)
 		return err
 	}
-
-	command = strings.TrimSpace(command)
-	utils.Logger.Info("Player entered command", "command", command)
-
-	switch command {
-	case "quit":
-		return ch.handleQuit(playerData)
-	default:
-		return ch.handleUnknownCommand(command)
-	}
+	utils.Logger.Info("Player viewed available commands")
+	return nil
 }
 
 func (ch *CommandHandler) handleQuit(playerData models.ReportData) error {
