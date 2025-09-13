@@ -1,0 +1,19 @@
+# Log files
+*.log
+
+# Go build artifacts
+/inventory
+inventory.exe
+
+# Go module cache
+go.sum
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
