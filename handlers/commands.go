@@ -10,6 +10,8 @@ import (
 	"github.com/ifrunruhin12/inventory/utils"
 )
 
+const MaxInventorySlots = 5
+
 type CommandHandler struct {
 	tmplMgr *TemplateManager
 	reader  *bufio.Reader
@@ -47,6 +49,11 @@ func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
 			if err != nil {
 				return err
 			}
+		case "slot":
+			err = ch.handleSlot(playerData)
+			if err != nil {
+				return err
+			}
 		case "cmd":
 			err = ch.handleHelp()
 			if err != nil {
@@ -68,6 +75,29 @@ func (ch *CommandHandler) handleShow(playerData models.ReportData) error {
 		return err
 	}
 	utils.Logger.Info("Player viewed inventory", "player", playerData.Player.Name)
+	return nil
+}
+
+func (ch *CommandHandler) handleSlot(playerData models.ReportData) error {
+	usedSlots := len(playerData.Inventory)
+	availableSlots := MaxInventorySlots - usedSlots
+
+	slotData := struct {
+		UsedSlots      int
+		AvailableSlots int
+		MaxSlots       int
+	}{
+		UsedSlots:      usedSlots,
+		AvailableSlots: availableSlots,
+		MaxSlots:       MaxInventorySlots,
+	}
+
+	err := ch.tmplMgr.Execute(os.Stdout, "slot.tmpl", slotData)
+	if err != nil {
+		utils.Logger.Error("Failed to execute slot template", "error", err)
+		return err
+	}
+	utils.Logger.Info("Player viewed inventory slots", "player", playerData.Player.Name, "usedSlots", usedSlots, "availableSlots", availableSlots)
 	return nil
 }
 
