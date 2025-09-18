@@ -4,83 +4,20 @@ package handlers
 import (
 	"bufio"
 	"os"
-	"strings"
 
 	"github.com/ifrunruhin12/inventory/models"
 	"github.com/ifrunruhin12/inventory/utils"
 )
-
-const MaxInventorySlots = 5
 
 type CommandHandler struct {
 	tmplMgr *TemplateManager
 	reader  *bufio.Reader
 }
 
-func ValidateInventorySlots(inventory []models.Item) bool {
-	return len(inventory) <= MaxInventorySlots
-}
-
-func GetAvailableSlots(inventory []models.Item) int {
-	used := len(inventory)
-	if used >= MaxInventorySlots {
-		return 0
-	}
-	return MaxInventorySlots - used
-}
-
-func IsInventoryFull(inventory []models.Item) bool {
-	return len(inventory) >= MaxInventorySlots
-}
-
 func NewCommandHandler(tmplMgr *TemplateManager, reader *bufio.Reader) *CommandHandler {
 	return &CommandHandler{
 		tmplMgr: tmplMgr,
 		reader:  reader,
-	}
-}
-
-func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
-	for {
-		err := ch.tmplMgr.Execute(os.Stdout, "cmd_prompt.tmpl", nil)
-		if err != nil {
-			utils.Logger.Error("Failed to execute command prompt template", "error", err)
-			return err
-		}
-
-		command, err := ch.reader.ReadString('\n')
-		if err != nil {
-			utils.Logger.Error("Failed to read command input", "error", err)
-			return err
-		}
-
-		command = strings.TrimSpace(command)
-		utils.Logger.Info("Player entered command", "command", command)
-
-		switch command {
-		case "quit", "exit":
-			return ch.handleQuit(playerData)
-		case "show":
-			err = ch.handleShow(playerData)
-			if err != nil {
-				return err
-			}
-		case "slot":
-			err = ch.handleSlot(playerData)
-			if err != nil {
-				return err
-			}
-		case "cmd":
-			err = ch.handleHelp()
-			if err != nil {
-				return err
-			}
-		default:
-			err = ch.handleUnknownCommand(command)
-			if err != nil {
-				return err
-			}
-		}
 	}
 }
 
@@ -96,8 +33,8 @@ func (ch *CommandHandler) handleShow(playerData models.ReportData) error {
 
 func (ch *CommandHandler) handleSlot(playerData models.ReportData) error {
 	usedSlots := len(playerData.Inventory)
-	availableSlots := GetAvailableSlots(playerData.Inventory)
-	isFull := IsInventoryFull(playerData.Inventory)
+	availableSlots := utils.GetAvailableSlots(playerData.Inventory)
+	isFull := utils.IsInventoryFull(playerData.Inventory)
 
 	slotData := struct {
 		UsedSlots      int
@@ -107,7 +44,7 @@ func (ch *CommandHandler) handleSlot(playerData models.ReportData) error {
 	}{
 		UsedSlots:      usedSlots,
 		AvailableSlots: availableSlots,
-		MaxSlots:       MaxInventorySlots,
+		MaxSlots:       utils.MaxInventorySlots,
 		IsFull:         isFull,
 	}
 
