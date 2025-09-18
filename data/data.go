@@ -12,16 +12,26 @@ import (
 )
 
 func CreatePlayerData(name string) models.ReportData {
+	inventory := []models.Item{
+		{Name: "sword", Count: 2},
+		{Name: "potion", Count: 3},
+		{Name: "bow", Count: 1},
+	}
+
+	if !handlers.ValidateInventorySlots(inventory) {
+		utils.Logger.Error("Default inventory exceeds slot limit", "inventorySize", len(inventory), "maxSlots", handlers.MaxInventorySlots)
+		if len(inventory) > handlers.MaxInventorySlots {
+			inventory = inventory[:handlers.MaxInventorySlots]
+			utils.Logger.Info("Truncated default inventory to fit slot limit", "newSize", len(inventory))
+		}
+	}
+
 	return models.ReportData{
 		Player: models.Player{
 			Name:  name,
 			Level: 1,
 		},
-		Inventory: []models.Item{
-			{Name: "sword", Count: 2},
-			{Name: "potion", Count: 3},
-			{Name: "bow", Count: 1},
-		},
+		Inventory: inventory,
 	}
 }
 

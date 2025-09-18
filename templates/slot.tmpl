@@ -1,3 +1,4 @@
 Inventory Slots:
 Used: {{.UsedSlots}}/{{.MaxSlots}}
-Available: {{.AvailableSlots}}
+Available: {{.AvailableSlots}}{{if .IsFull}}
+Inventory is FULL!{{end}}

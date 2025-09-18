@@ -17,6 +17,22 @@ type CommandHandler struct {
 	reader  *bufio.Reader
 }
 
+func ValidateInventorySlots(inventory []models.Item) bool {
+	return len(inventory) <= MaxInventorySlots
+}
+
+func GetAvailableSlots(inventory []models.Item) int {
+	used := len(inventory)
+	if used >= MaxInventorySlots {
+		return 0
+	}
+	return MaxInventorySlots - used
+}
+
+func IsInventoryFull(inventory []models.Item) bool {
+	return len(inventory) >= MaxInventorySlots
+}
+
 func NewCommandHandler(tmplMgr *TemplateManager, reader *bufio.Reader) *CommandHandler {
 	return &CommandHandler{
 		tmplMgr: tmplMgr,
@@ -80,16 +96,19 @@ func (ch *CommandHandler) handleShow(playerData models.ReportData) error {
 
 func (ch *CommandHandler) handleSlot(playerData models.ReportData) error {
 	usedSlots := len(playerData.Inventory)
-	availableSlots := MaxInventorySlots - usedSlots
+	availableSlots := GetAvailableSlots(playerData.Inventory)
+	isFull := IsInventoryFull(playerData.Inventory)
 
 	slotData := struct {
 		UsedSlots      int
 		AvailableSlots int
 		MaxSlots       int
+		IsFull         bool
 	}{
 		UsedSlots:      usedSlots,
 		AvailableSlots: availableSlots,
 		MaxSlots:       MaxInventorySlots,
+		IsFull:         isFull,
 	}
 
 	err := ch.tmplMgr.Execute(os.Stdout, "slot.tmpl", slotData)
@@ -97,7 +116,7 @@ func (ch *CommandHandler) handleSlot(playerData models.ReportData) error {
 		utils.Logger.Error("Failed to execute slot template", "error", err)
 		return err
 	}
-	utils.Logger.Info("Player viewed inventory slots", "player", playerData.Player.Name, "usedSlots", usedSlots, "availableSlots", availableSlots)
+	utils.Logger.Info("Player viewed inventory slots", "player", playerData.Player.Name, "usedSlots", usedSlots, "availableSlots", availableSlots, "isFull", isFull)
 	return nil
 }
 
