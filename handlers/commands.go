@@ -14,6 +14,22 @@ type CommandHandler struct {
 	reader  *bufio.Reader
 }
 
+func GetAvailableItems() []string {
+	return []string{
+		"sword",
+		"shield",
+		"potion",
+		"bow",
+		"arrow",
+		"armor",
+		"staff",
+		"ring",
+		"amulet",
+		"scroll",
+		"gem",
+	}
+}
+
 func NewCommandHandler(tmplMgr *TemplateManager, reader *bufio.Reader) *CommandHandler {
 	return &CommandHandler{
 		tmplMgr: tmplMgr,
@@ -28,6 +44,24 @@ func (ch *CommandHandler) handleShow(playerData models.ReportData) error {
 		return err
 	}
 	utils.Logger.Info("Player viewed inventory", "player", playerData.Player.Name)
+	return nil
+}
+
+func (ch *CommandHandler) handleItems() error {
+	availableItems := GetAvailableItems()
+
+	itemData := struct {
+		Items []string
+	}{
+		Items: availableItems,
+	}
+
+	err := ch.tmplMgr.Execute(os.Stdout, "items.tmpl", itemData)
+	if err != nil {
+		utils.Logger.Error("Failed to execute items template", "error", err)
+		return err
+	}
+	utils.Logger.Info("Player viewed available items", "itemCount", len(availableItems))
 	return nil
 }
 

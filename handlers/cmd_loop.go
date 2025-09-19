@@ -38,6 +38,11 @@ func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
 			if err != nil {
 				return err
 			}
+		case "item":
+			err = ch.handleItems()
+			if err != nil {
+				return err
+			}
 		case "cmd":
 			err = ch.handleHelp()
 			if err != nil {
