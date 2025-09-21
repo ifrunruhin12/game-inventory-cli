@@ -1,0 +1,3 @@
+{{if .IsNewItem}}
+How many "{{.ItemName}}" you wanna add (you have {{.AvailableSlots}} slot{{if ne .AvailableSlots 1}}s{{end}} available): 
+{{else}}How many "{{.ItemName}}" you wanna add: {{end}}

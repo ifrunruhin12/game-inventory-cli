@@ -9,6 +9,9 @@ import (
 )
 
 func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
+	// Use pointer to allow modifications
+	data := &playerData
+
 	for {
 		err := ch.tmplMgr.Execute(os.Stdout, "cmd_prompt.tmpl", nil)
 		if err != nil {
@@ -23,23 +26,28 @@ func (ch *CommandHandler) HandleCommands(playerData models.ReportData) error {
 		}
 
 		command = strings.TrimSpace(command)
-		utils.Logger.Info("Player entered command", "command", command)
+		utils.Logger.Info("Player entered command", "command", command, "player", data.Player.Name)
 
 		switch command {
 		case "quit", "exit":
-			return ch.handleQuit(playerData)
+			return ch.handleQuit(*data)
 		case "show":
-			err = ch.handleShow(playerData)
+			err = ch.handleShow(*data)
 			if err != nil {
 				return err
 			}
 		case "slot":
-			err = ch.handleSlot(playerData)
+			err = ch.handleSlot(*data)
 			if err != nil {
 				return err
 			}
 		case "item":
 			err = ch.handleItems()
+			if err != nil {
+				return err
+			}
+		case "add":
+			err = ch.handleAdd(data)
 			if err != nil {
 				return err
 			}
